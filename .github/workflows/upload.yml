@@ -1,0 +1,37 @@
+name: Upload
+
+on:
+  push:
+    tags:
+    - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Run test
+      run: |
+        git describe --tags --match='v[0-9].*' > VERSION
+        echo test > test-$(cat VERSION).txt
+
+    - name: Upload test
+      run: |
+        VERSION="$(cat VERSION)"
+        FILE="$(echo test-$(cat VERSION).txt)"
+        MIME="$(file -b --mime-type "$FILE")"
+
+        env
+        echo VERSION=$VERSION FILE=$FILE MIME=$MIME
+
+        GITHUB_ID="$(curl "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$VERSION" | jq .id)"
+        echo $GITHUB_ID
+
+        curl -H "Authorization: token ${{ secrets.TEST }}" \
+             -H "Content-Type: $MIME" \
+             "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$GITHUB_ID/assets?name=$FILE" \
+             --data-binary "@$FILE"
+
+        #echo ${{ secrets.TEST }} | gh auth login --with-token
+        #gh release upload v$VERSION $FILE
