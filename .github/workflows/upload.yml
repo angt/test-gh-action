@@ -17,6 +17,8 @@ jobs:
         echo test > test-$(cat VERSION).txt
 
     - name: Upload test
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         VERSION="$(cat VERSION)"
         FILE="$(echo test-$(cat VERSION).txt)"
@@ -28,10 +30,10 @@ jobs:
         GITHUB_ID="$(curl "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/tags/$VERSION" | jq .id)"
         echo $GITHUB_ID
 
-        curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-             -H "Content-Type: $MIME" \
-             "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$GITHUB_ID/assets?name=$FILE" \
-             --data-binary "@$FILE"
+        #curl -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        #     -H "Content-Type: $MIME" \
+        #     "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$GITHUB_ID/assets?name=$FILE" \
+        #     --data-binary "@$FILE"
 
-           #echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
-        #gh release upload v$VERSION $FILE
+        #echo ${{ secrets.GITHUB_TOKEN }} | gh auth login --with-token
+        gh release upload $VERSION $FILE
